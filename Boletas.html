@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boleta de Venta</title>
+<style>
+:root{--accent:#0d6efd;--ink:#111;--muted:#666;--bg:#fff;--border:#e5e7eb;--row:#fafafa}
+*{box-sizing:border-box}
+body{margin:16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+.header{display:flex;gap:16px;align-items:center;justify-content:space-between}
+.brand{font-weight:700;font-size:20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo img{height:64px;width:auto;border-radius:4px}
+.actions{display:flex;gap:8px}
+button{cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--ink);padding:8px 12px;border-radius:8px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.danger{background:#ef4444;border-color:#ef4444;color:#fff}
+.container{max-width:920px;margin:0 auto}
+.card{border:1px solid var(--border);border-radius:12px}
+.card h3{margin:0;padding:12px 16px;border-bottom:1px solid var(--border)}
+.card-body{padding:12px 16px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.input{display:flex;flex-direction:column;gap:6px}
+.input label{font-size:12px;color:var(--muted)}
+.input input,.input select,.input textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px}
+.table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.table thead th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--row)}
+.table th,.table td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
+.table tfoot td{font-weight:600}
+.table input{width:100%;padding:8px;border:1px solid var(--border);border-radius:6px}
+.summary{display:flex;gap:6px;justify-content:flex-end;align-items:flex-end;flex-direction:column}
+.summary .line{display:flex;gap:8px;align-items:center}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--row);border:1px solid var(--border);font-size:12px;color:var(--muted)}
+.small{font-size:12px;color:var(--muted)}
+.notice{padding:8px 12px;border:1px solid #fde68a;background:#fffbeb;border-radius:8px;color:#92400e}
+@media print{
+  body{margin:0}
+  .no-print{display:none !important}
+  .card,.table{border-color:#ddd}
+  button{display:none}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+<div class="container" id="exportArea">
+<div class="header">
+<div class="logo">
+<img id="logoImg" alt="Logo" style="display:none">
+<img id="qrImg" alt="QR Instagram" style="display:none;height:64px;width:64px;border-radius:8px;border:1px solid var(--border)">
+<div>
+<div class="brand">Sir Perfume - Nota de Venta</div>
+<div class="small">Instagram: @sir_perfume.cb • Tel: 955774113</div>
+</div>
+</div>
+<div class="actions no-print">
+<button id="btn-logo">Cargar logo</button>
+<button id="btn-qr">Cargar QR IG</button>
+<button id="btn-pdf" class="primary">Descargar PDF</button>
+<button class="primary" id="btn-imprimir">Imprimir boleta</button>
+<button id="btn-limpiar" class="danger">Nueva boleta</button>
+<input id="input-logo" type="file" accept="image/*" style="display:none">
+<input id="input-qr" type="file" accept="image/*" style="display:none">
+</div>
+</div>
+
+<div class="card" style="margin-top:16px">
+<h3>Datos de la boleta</h3>
+<div class="card-body">
+<div class="grid">
+<div class="input" style="grid-column: span 6">
+<label>Cliente</label>
+<input id="cliente" placeholder="Nombre del cliente">
+</div>
+<div class="input" style="grid-column: span 3">
+<label>Documento</label>
+<select id="tipoDoc">
+<option value="DNI">DNI</option>
+<option value="CE">CE</option>
+<option value="RUC">RUC</option>
+</select>
+</div>
+<div class="input" style="grid-column: span 3">
+<label>Número</label>
+<input id="numeroDoc" placeholder="00000000">
+</div>
+<div class="input" style="grid-column: span 3">
+<label>Agencia</label>
+<select id="agencia">
+<option value="">Selecciona</option>
+<option>Shalom</option>
+<option>Olva</option>
+</select>
+</div>
+<div class="input" style="grid-column: span 6">
+<label>Dirección</label>
+<input id="direccion" placeholder="Calle, número, distrito">
+</div>
+<div class="input" style="grid-column: span 3">
+<label>Fecha</label>
+<input id="fecha" type="date">
+</div>
+<div class="input" style="grid-column: span 3">
+<label>N° Boleta</label>
+<input id="nBoleta" placeholder="B001-000001">
+</div>
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:16px">
+<h3>Detalle de productos</h3>
+<div class="card-body">
+<div class="notice no-print" style="margin-bottom:12px">Gracias por su preferencia</div>
+<table class="table" id="items">
+<thead>
+<tr>
+<th style="width:70px">Cant.</th>
+<th>Descripción</th>
+<th style="width:140px">Precio Unit. (S/)</th>
+<th style="width:140px">Importe (S/)</th>
+<th class="no-print" style="width:80px">Acción</th>
+</tr>
+</thead>
+<tbody id="items-body">
+</tbody>
+<tfoot>
+<tr>
+<td colspan="5" class="no-print">
+<button id="agregar-fila">Agregar línea</button>
+</td>
+</tr>
+</tfoot>
+</table>
+<div class="summary" style="margin-top:12px">
+<label class="line"><input id="aplicarIgv" type="checkbox" checked> <span>Aplicar IGV 18%</span></label>
+<span class="line">Sub total: <span class="badge" id="subtotal">S/ 0.00</span></span>
+<span class="line">IGV (18%): <span class="badge" id="igv">S/ 0.00</span></span>
+<span class="line">Total: <span class="badge" id="total">S/ 0.00</span></span>
+</div>
+</div>
+</div>
+
+<div class="small" style="margin-top:12px">Moneda: Soles (PEN). Los importes incluyen o excluyen IGV según la casilla seleccionada.</div>
+</div>
+
+<script>
+const itemsBody=document.getElementById('items-body');
+const subtotalEl=document.getElementById('subtotal');
+const igvEl=document.getElementById('igv');
+const totalEl=document.getElementById('total');
+const aplicarIgv=document.getElementById('aplicarIgv');
+const btnAgregar=document.getElementById('agregar-fila');
+const btnLimpiar=document.getElementById('btn-limpiar');
+const btnImprimir=document.getElementById('btn-imprimir');
+const btnLogo=document.getElementById('btn-logo');
+const inputLogo=document.getElementById('input-logo');
+const logoImg=document.getElementById('logoImg');
+const btnPdf=document.getElementById('btn-pdf');
+const btnQr=document.getElementById('btn-qr');
+const inputQr=document.getElementById('input-qr');
+const qrImg=document.getElementById('qrImg');
+function formatoMoneda(n){return 'S/ '+(Number(n)||0).toFixed(2)}
+function crearFila(valor={cantidad:1,descripcion:'',precio:0}){
+const tr=document.createElement('tr');
+tr.innerHTML='<td><input type="number" min="0" step="0.01" class="cant" value="'+(valor.cantidad||'')+'"></td>'+
+'<td><input type="text" class="desc" placeholder="Ej. Perfume 50ml" value="'+(valor.descripcion||'')+'"></td>'+
+'<td><input type="number" min="0" step="0.01" class="precio" value="'+(valor.precio||'')+'"></td>'+
+'<td class="importe">'+formatoMoneda(0)+'</td>'+
+'<td class="no-print"><button class="danger btn-borrar">Quitar</button></td>';
+itemsBody.appendChild(tr);
+tr.querySelectorAll('input').forEach(el=>el.addEventListener('input',recalcular));
+const btn=tr.querySelector('.btn-borrar');
+btn.addEventListener('click',()=>{tr.remove();recalcular()});
+}
+function obtenerItems(){
+const filas=[...itemsBody.querySelectorAll('tr')];
+return filas.map(tr=>{
+const cantidad=parseFloat(tr.querySelector('.cant').value)||0;
+const precio=parseFloat(tr.querySelector('.precio').value)||0;
+const descripcion=tr.querySelector('.desc').value||'';
+return {cantidad,precio,descripcion,tr};
+});
+}
+function recalcular(){
+let sub=0;
+const items=obtenerItems();
+items.forEach(it=>{
+const importe=it.cantidad*it.precio;
+sub+=importe;
+const celda=it.tr.querySelector('.importe');
+celda.textContent=formatoMoneda(importe);
+});
+let igv=0,total=sub;
+if(aplicarIgv.checked){
+igv=sub*0.18;
+total=sub+igv;
+}
+subtotalEl.textContent=formatoMoneda(sub);
+igvEl.textContent=formatoMoneda(igv);
+totalEl.textContent=formatoMoneda(total);
+}
+function limpiar(){
+itemsBody.innerHTML='';
+crearFila();
+recalcular();
+(document.getElementById('cliente').value='');
+(document.getElementById('numeroDoc').value='');
+(document.getElementById('direccion').value='');
+(document.getElementById('nBoleta').value='');
+const f=document.getElementById('fecha');
+const hoy=new Date();
+f.value=hoy.toISOString().slice(0,10);
+}
+function prepararParaImpresion(){
+recalcular();
+window.print();
+}
+function descargarPDF(){
+recalcular();
+if(typeof html2pdf==='undefined'){
+  alert('No se pudo cargar la librería para PDF. Verifica tu conexión e intenta de nuevo.');
+  return;
+}
+const area=document.getElementById('exportArea');
+const file=(document.getElementById('nBoleta').value||'Boleta')
+  .replace(/[^\w\-]+/g,'_');
+const opts={
+  margin:10,
+  filename:file+'.pdf',
+  image:{type:'jpeg',quality:0.98},
+  html2canvas:{scale:2,useCORS:true},
+  jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+};
+const hidden=[];document.querySelectorAll('.no-print').forEach(el=>{hidden.push([el,el.style.display]);el.style.display='none'});
+html2pdf().from(area).set(opts).save().then(()=>{
+  hidden.forEach(([el,prev])=>{el.style.display=prev});
+}).catch(err=>{
+  hidden.forEach(([el,prev])=>{el.style.display=prev});
+  console.error(err);
+  alert('Ocurrió un error al generar el PDF.');
+});
+}
+// Persistencia de imágenes (logo y QR) en localStorage
+const STORAGE_KEYS={logo:'boleta_logo_dataurl',qr:'boleta_qr_dataurl'};
+function cargarImagenDesdeStorage(){
+  try{
+    const logo=localStorage.getItem(STORAGE_KEYS.logo);
+    if(logo){logoImg.src=logo;logoImg.style.display='block'}
+    const qr=localStorage.getItem(STORAGE_KEYS.qr);
+    if(qr){qrImg.src=qr;qrImg.style.display='block'}
+  }catch(e){/* ignore storage errors */}
+}
+function guardarEnStorage(key,dataUrl){
+  try{localStorage.setItem(key,dataUrl)}catch(e){/* ignore quota */}
+}
+// Eventos de carga de imágenes
+btnAgregar.addEventListener('click',()=>{crearFila();recalcular()});
+btnLimpiar.addEventListener('click',limpiar);
+btnImprimir.addEventListener('click',prepararParaImpresion);
+btnPdf.addEventListener('click',descargarPDF);
+aplicarIgv.addEventListener('change',recalcular);
+btnLogo.addEventListener('click',()=>inputLogo.click());
+inputLogo.addEventListener('change',()=>{
+  const file=inputLogo.files&&inputLogo.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{logoImg.src=e.target.result;logoImg.style.display='block';guardarEnStorage(STORAGE_KEYS.logo,e.target.result)};
+  reader.readAsDataURL(file);
+});
+btnQr&&btnQr.addEventListener('click',()=>inputQr.click());
+inputQr&&inputQr.addEventListener('change',()=>{
+  const file=inputQr.files&&inputQr.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{qrImg.src=e.target.result;qrImg.style.display='block';guardarEnStorage(STORAGE_KEYS.qr,e.target.result)};
+  reader.readAsDataURL(file);
+});
+crearFila();
+recalcular();
+const f=document.getElementById('fecha');
+if(!f.value){const hoy=new Date();f.value=hoy.toISOString().slice(0,10)}
+// Inicializa imágenes guardadas
+cargarImagenDesdeStorage();
+</script>
+</body>
+</html>
